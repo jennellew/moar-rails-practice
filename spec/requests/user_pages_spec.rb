@@ -10,7 +10,7 @@ describe "UserPages" do
     before(:all) { 30.times {FactoryGirl.create(:user) } }
     after(:all) { User.delete_all }
 
-    before(:each) do
+    before do
       visit signin_path
       sign_in user
       visit users_path
@@ -29,9 +29,29 @@ describe "UserPages" do
         end
       end
     end
+
+    describe "delete links" do
+
+      it { should_not have_link('delete') }
+
+      describe "as an admin user" do
+        let(:admin) { FactoryGirl.create(:admin) }
+        before do
+          visit signin_path
+          sign_in admin
+          visit users_path
+        end
+
+        it { should have_link('delete', href: user_path(User.first)) }
+        it "should be able to delete another user" do
+          expect { click_link('delete') }.to change(User, :count).by(-1)
+        end
+        it {should_not have_link('delete', href: user_path(admin)) }
+      end
+    end
   end
 
-  describe "signup page" do
+  describe "signup" do
     before { visit signup_path }
 
     let(:submit) { "Create my account" }
